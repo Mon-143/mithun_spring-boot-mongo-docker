@@ -1,41 +1,22 @@
 node{
-     
-    stage('SCM Checkout'){
-        git credentialsId: 'GIT_CREDENTIALS', url:  'https://github.com/MithunTechnologiesDevOps/spring-boot-mongo-docker.git',branch: 'master'
+    stage("Git clone"){
+       git credentialsId: 'GIT_CREDENTIALS', url: 'https://github.com/Mon-143/mithun_spring-boot-mongo-docker'
     }
-    
-    stage(" Maven Clean Package"){
-      def mavenHome =  tool name: "Maven-3.6.1", type: "maven"
-      def mavenCMD = "${mavenHome}/bin/mvn"
-      sh "${mavenCMD} clean package"
-      
-    } 
-    
-    
-    stage('Build Docker Image'){
-        sh 'docker build -t dockerhandson/spring-boot-mongo .'
+    stage("maven clean build"){
+       def mavanHome = tool name: "Maven_3.8.6", type: "maven"
+       def mavenCMD = "${mavanHome}/bin/mvn"
+       sh "${mavenCMD} clean package"
     }
-    
-    stage('Push Docker Image'){
-        withCredentials([string(credentialsId: 'DOKCER_HUB_PASSWORD', variable: 'DOKCER_HUB_PASSWORD')]) {
-          sh "docker login -u dockerhandson -p ${DOKCER_HUB_PASSWORD}"
-        }
-        sh 'docker push dockerhandson/spring-boot-mongo'
-     }
-     
-     stage("Deploy To Kuberates Cluster"){
-       kubernetesDeploy(
-         configs: 'springBootMongo.yml', 
-         kubeconfigId: 'KUBERNATES_CONFIG',
-         enableConfigSubstitution: true
-        )
-     }
-	 
-	  /**
-      stage("Deploy To Kuberates Cluster"){
-        sh 'kubectl apply -f pringBootMongo.yml'
-      } **/
-     
+    stage("Build Docker Image"){
+        sh "docker build -t pattmon/spring-boot-mongo ."
+    }
+        stage("Docker Push"){
+         withCredentials([string(credentialsId: 'DOCKER_HUB_CREDENTIALS', variable: 'DOCKER_HUB_CREDENTIALS')]) {
+        sh "docker login -u pattmon -p${DOCKER_HUB_CREDENTIALS}"
+    }   
+        sh "docker push pattmon/spring-boot-mongo "
+    }
+    stage("Deploy To Kubernetes Cluster"){
+        sh "kubectl apply -f springBootMongo.yml"
 }
-
-
+}
